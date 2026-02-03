@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feliz Aniversario 💚</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --verde-oscuro: #0A3323;
+      --verde-oliva: #839958;
+      --crema: #F7F4D5;
+      --rosa: #D3968C;
+      --azul: #105666;
+      --bg-image: none;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(247,244,213,0.88), rgba(247,244,213,0.88)),
+        var(--bg-image),
+        linear-gradient(160deg, var(--crema), var(--verde-oliva));
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--verde-oscuro);
+    }
+
+    /* 🔥 MÁS ANCHO GENERAL */
+    .screen,
+    .container,
+    .menu {
+      width: 100%;
+      max-width: 900px;
+      padding: 1.2rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.2rem;
+    }
+
+    button {
+      background-color: var(--azul);
+      color: var(--crema);
+      border: none;
+      padding: 0.7rem 1.4rem;
+      font-size: 0.95rem;
+      border-radius: 999px;
+      cursor: pointer;
+      margin: 0.3rem;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    }
+
+    button.secondary {
+      background-color: var(--rosa);
+      color: var(--verde-oscuro);
+    }
+
+    /* --- SLIDE --- */
+    .slide {
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    @media (min-width: 700px) {
+      .slide {
+        flex-direction: row;
+        align-items: stretch;
+      }
+    }
+
+    /* FOTO GRANDE Y ANCHA */
+    .photo-box {
+      flex: 2.2;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      object-fit: cover;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    }
+
+    /* POEMA MÁS ANCHO */
+    .poem-box {
+      flex: 1.4;
+      background-color: rgba(247,244,213,0.95);
+      border-radius: 20px;
+      padding: 1.6rem;
+      font-size: 1rem;
+      line-height: 1.7;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      white-space: pre-wrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: left;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 0.6rem;
+    }
+
+    /* --- MENU --- */
+    .menu {
+      display: none;
+      background: rgba(247,244,213,0.97);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      text-align: left;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 0.6rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 0.9rem;
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+    }
+  </style>
+</head>
+
+<body>
+
+  <audio id="music" src="cancion.mp3" loop></audio>
+
+  <!-- PANTALLA INICIAL -->
+  <div class="screen" id="startScreen">
+    <h1 contenteditable="true">Feliz aniversario 💚</h1>
+    <button onclick="start()">Empezar</button>
+    <button class="secondary" onclick="openMenu()">Editar</button>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="container" id="content" onclick="nextSlide()" style="display:none">
+    <div class="slide">
+      <div class="photo-box">
+        <img id="photo" src="foto1.jpg" alt="Recuerdo" />
+      </div>
+
+      <div class="poem-box" id="poem">
+        Este es nuestro poema.
+
+        No porque rime,
+        sino porque nos nombra,
+        porque dice sin gritar
+        todo lo que somos.
+      </div>
+    </div>
+
+    <div class="hint">(tocá la pantalla para cambiar la foto)</div>
+
+    <button class="secondary" onclick="toggleMusic(); event.stopPropagation();">⏯ Música</button>
+    <button class="secondary" onclick="openMenu(); event.stopPropagation();">Menú</button>
+  </div>
+
+  <!-- MENU -->
+  <div class="menu" id="menu">
+    <h2>Poema</h2>
+    <textarea id="poemInput" placeholder="Poema fijo"></textarea>
+
+    <h2>Foto de fondo</h2>
+    <input id="bg" placeholder="Ej: fondo.jpg o https://..." />
+
+    <button onclick="saveAll()">Guardar</button>
+    <button class="secondary" onclick="closeMenu()">Cerrar</button>
+  </div>
+
+  <script>
+    const slides = [
+      "foto1.jpg",
+      "foto2.jpg",
+      "foto3.jpg",
+      "foto4.jpg",
+      "foto5.jpg"
+    ];
+
+    let index = 0;
+
+    function applyBackground(url) {
+      if (!url) return;
+      document.documentElement.style.setProperty('--bg-image', `url('${url}')`);
+    }
+
+    function start() {
+      document.getElementById('startScreen').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+      document.getElementById('music').play();
+      loadSaved();
+    }
+
+    function updateSlide() {
+      document.getElementById('photo').src = slides[index];
+    }
+
+    function nextSlide() {
+      index = (index + 1) % slides.length;
+      updateSlide();
+    }
+
+    function toggleMusic() {
+      const music = document.getElementById('music');
+      music.paused ? music.play() : music.pause();
+    }
+
+    function openMenu() {
+      document.getElementById('menu').style.display = 'block';
+      document.getElementById('poemInput').value =
+        localStorage.getItem('poem') || document.getElementById('poem').innerText;
+      document.getElementById('bg').value =
+        localStorage.getItem('background') || '';
+    }
+
+    function closeMenu() {
+      document.getElementById('menu').style.display = 'none';
+    }
+
+    function saveAll() {
+      const poem = document.getElementById('poemInput').value;
+      if (poem.trim()) {
+        document.getElementById('poem').innerText = poem;
+        localStorage.setItem('poem', poem);
+      }
+
+      const bg = document.getElementById('bg').value.trim();
+      if (bg) {
+        localStorage.setItem('background', bg);
+        applyBackground(bg);
+      }
+
+      closeMenu();
+    }
+
+    function loadSaved() {
+      const poem = localStorage.getItem('poem');
+      if (poem) document.getElementById('poem').innerText = poem;
+
+      const bg = localStorage.getItem('background');
+      if (bg) applyBackground(bg);
+
+      updateSlide();
+    }
+  </script>
+
+</body>
+</html>
